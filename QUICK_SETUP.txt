@@ -1,0 +1,44 @@
+==========================================
+QUICK SETUP & TRAINING COMMANDS
+==========================================
+
+# METHOD 1: Automated (Easiest)
+chmod +x setup_and_train.sh
+./setup_and_train.sh
+
+# METHOD 2: Manual Step-by-Step
+cd /home/mubeen/ai
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+mkdir -p data/synthetic models/trained models/backup
+python train.py --generate --samples 10000
+
+# METHOD 3: One-Liner (Copy all at once)
+cd /home/mubeen/ai && python3 -m venv venv && source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt && mkdir -p data/synthetic models/trained models/backup && python train.py --generate --samples 10000
+
+==========================================
+AFTER SETUP - Activate & Use
+==========================================
+
+# Activate virtual environment (every new session)
+cd /home/mubeen/ai
+source venv/bin/activate
+
+# Train model
+python train.py --generate --samples 10000
+
+# OR use interactive menu
+python train_simple.py
+
+# Test the system (no training needed)
+python example_usage.py
+
+# Evaluate trained model
+python evaluate.py --model models/trained/best_model.pkl --scaler models/trained/scaler.pkl --generate-test
+
+==========================================
+DEACTIVATE VIRTUAL ENVIRONMENT
+==========================================
+deactivate
