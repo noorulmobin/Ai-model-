@@ -28,9 +28,17 @@ from src.scoring import RuleBasedScorer
 class ModelTrainer:
     """Train and evaluate ML models for stream recommendation"""
     
-    def __init__(self, random_state: int = 42):
+    def __init__(self, random_state: int = 42, use_career_guidance: bool = True):
+        """
+        Initialize model trainer
+        
+        Args:
+            random_state: Random seed for reproducibility
+            use_career_guidance: If True, include career guidance features in training
+        """
         self.random_state = random_state
-        self.feature_engineer = FeatureEngineer()
+        self.use_career_guidance = use_career_guidance
+        self.feature_engineer = FeatureEngineer(use_career_guidance=use_career_guidance)
         self.scorer = RuleBasedScorer()
         self.scaler = StandardScaler()
         self.models = {}

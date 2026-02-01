@@ -9,16 +9,26 @@ from typing import Dict, List
 from src.data_models import StudentProfile, StreamType
 from src.feature_engineer import FeatureEngineer
 from src.scoring import RuleBasedScorer
+from src.career_guidance import CareerGuidanceQA, integrate_with_recommendation
 
 
 class FSCPredictor:
     """Predictor class for making recommendations"""
     
-    def __init__(self, model_path: str = None, scaler_path: str = None):
+    def __init__(self, model_path: str = None, scaler_path: str = None, 
+                 use_career_guidance: bool = True):
         self.feature_engineer = FeatureEngineer()
         self.scorer = RuleBasedScorer()
         self.model = None
         self.scaler = None
+        self.career_qa = None
+        
+        if use_career_guidance:
+            try:
+                self.career_qa = CareerGuidanceQA()
+            except Exception as e:
+                print(f"⚠️ Career guidance not available: {e}")
+                self.career_qa = None
         
         if model_path and scaler_path:
             self.load_model(model_path, scaler_path)
@@ -101,7 +111,7 @@ class FSCPredictor:
             # Get rule-based recommendation for comparison
             rule_based_result = self.scorer.recommend(profile)
             
-            return {
+            result = {
                 'ml_prediction': predicted_stream.value,
                 'ml_probabilities': {k.value: v for k, v in probabilities.items()},
                 'rule_based_recommendation': rule_based_result.top_recommendation.stream.value,
@@ -112,13 +122,19 @@ class FSCPredictor:
                 'warnings': rule_based_result.warnings,
                 'suggestions': rule_based_result.suggestions
             }
+            
+            # Add career guidance if available
+            if self.career_qa:
+                result = integrate_with_recommendation(result, self.career_qa)
+            
+            return result
         else:
             # Use rule-based system
-            result = self.scorer.recommend(profile)
+            result_obj = self.scorer.recommend(profile)
             
-            return {
-                'recommended_stream': result.top_recommendation.stream.value,
-                'match_percentage': result.top_recommendation.match_percentage,
+            result = {
+                'recommended_stream': result_obj.top_recommendation.stream.value,
+                'match_percentage': result_obj.top_recommendation.match_percentage,
                 'all_recommendations': [
                     {
                         'stream': rec.stream.value,
@@ -130,8 +146,14 @@ class FSCPredictor:
                         'interest_score': rec.interest_score,
                         'reasoning': rec.reasoning
                     }
-                    for rec in result.recommendations
+                    for rec in result_obj.recommendations
                 ],
-                'warnings': result.warnings,
-                'suggestions': result.suggestions
+                'warnings': result_obj.warnings,
+                'suggestions': result_obj.suggestions
             }
+            
+            # Add career guidance if available
+            if self.career_qa:
+                result = integrate_with_recommendation(result, self.career_qa)
+            
+            return result

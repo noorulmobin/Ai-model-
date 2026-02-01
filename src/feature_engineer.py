@@ -4,15 +4,32 @@ Converts student profiles into feature vectors
 """
 import numpy as np
 import pandas as pd
-from typing import List, Dict
+from typing import List, Dict, Optional
 from src.data_models import StudentProfile, StreamType, PersonalityType
+from src.career_guidance_features import CareerGuidanceFeatureExtractor
 
 
 class FeatureEngineer:
     """Feature engineering for student profiles"""
     
-    def __init__(self):
+    def __init__(self, use_career_guidance: bool = True):
+        """
+        Initialize feature engineer
+        
+        Args:
+            use_career_guidance: If True, include career guidance features
+        """
         self.personality_encoding = self._create_personality_encoding()
+        self.use_career_guidance = use_career_guidance
+        self.career_guidance_extractor = None
+        
+        if use_career_guidance:
+            try:
+                self.career_guidance_extractor = CareerGuidanceFeatureExtractor()
+                print("✅ Career guidance features enabled")
+            except Exception as e:
+                print(f"⚠️ Career guidance features disabled: {e}")
+                self.use_career_guidance = False
     
     def _create_personality_encoding(self) -> Dict[PersonalityType, np.ndarray]:
         """Create one-hot encoding for personality types"""
@@ -89,6 +106,16 @@ class FeatureEngineer:
         features.append(academic.biology * interests.medicine_healthcare / 100)  # Medical alignment
         features.append(academic.computer * interests.computers_programming / 100)  # CS alignment
         
+        # Career guidance features (if enabled)
+        if self.use_career_guidance and self.career_guidance_extractor:
+            try:
+                cg_features = self.career_guidance_extractor.extract_career_guidance_features(profile)
+                features.extend(cg_features.tolist())
+            except Exception as e:
+                # If career guidance fails, add zeros
+                cg_count = self.career_guidance_extractor.get_feature_count()
+                features.extend([0.0] * cg_count)
+        
         return np.array(features, dtype=np.float32)
     
     def extract_features_batch(self, profiles: List[StudentProfile]) -> np.ndarray:
@@ -116,6 +143,16 @@ class FeatureEngineer:
         
         # Interactions
         names.extend(['math_apt_alignment', 'bio_medical_alignment', 'cs_interest_alignment'])
+        
+        # Career guidance features (if enabled)
+        if self.use_career_guidance and self.career_guidance_extractor:
+            try:
+                cg_names = self.career_guidance_extractor.get_feature_names()
+                names.extend(cg_names)
+            except Exception:
+                # Add placeholder names if extractor not available
+                cg_count = 17  # Default count
+                names.extend([f'cg_feature_{i}' for i in range(cg_count)])
         
         return names
     

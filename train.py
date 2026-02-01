@@ -74,6 +74,10 @@ def main():
                        help='Directory to save trained models')
     parser.add_argument('--test-size', type=float, default=0.2,
                        help='Test set size ratio')
+    parser.add_argument('--use-career-guidance', action='store_true', default=True,
+                       help='Use career guidance features in training (default: True)')
+    parser.add_argument('--no-career-guidance', dest='use_career_guidance', action='store_false',
+                       help='Disable career guidance features')
     
     args = parser.parse_args()
     
@@ -96,7 +100,17 @@ def main():
     print("Starting Model Training")
     print("="*50)
     
-    trainer = ModelTrainer(random_state=42)
+    if args.use_career_guidance:
+        print("✅ Career guidance features: ENABLED")
+        print("   Training with enhanced features (original + career guidance)")
+    else:
+        print("ℹ️  Career guidance features: DISABLED")
+        print("   Training with original features only")
+    
+    trainer = ModelTrainer(
+        random_state=42,
+        use_career_guidance=args.use_career_guidance
+    )
     results = trainer.train_all_models(profiles, test_size=args.test_size)
     
     # Save models

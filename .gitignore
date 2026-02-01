@@ -24,9 +24,12 @@ data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
-# Models (optional - uncomment if you don't want to track models)
-# models/trained/*.pkl
-# models/backup/*.pkl
+# Models - exclude large model files (they can be regenerated)
+models/trained/*.pkl
+models/trained/*.pkl.*
+models/backup/*.pkl
+*.pkl
+!requirements.txt
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
